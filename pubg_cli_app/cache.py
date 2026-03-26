@@ -39,45 +39,67 @@ class MatchCache:
     def upsert_match(self, match_id: str, payload: Dict[str, Any]) -> None:
         self.matches[match_id] = payload
 
+    def _build_record(self, match_id: str, item: Dict[str, Any], player_names: List[str], allowed: set[str]) -> Dict[str, Any] | None:
+        if not isinstance(item, dict):
+            return None
+        if item.get("usable") is False:
+            return None
+        mode = str(item.get("game_mode", ""))
+        if mode not in allowed:
+            return None
+        players = item.get("players", {})
+        if not isinstance(players, dict):
+            return None
+        if not all(name in players for name in player_names):
+            return None
+
+        kills: Dict[str, float] = {}
+        for name in player_names:
+            p = players.get(name)
+            if not isinstance(p, dict) or "kills" not in p:
+                return None
+            kills[name] = float(p.get("kills", 0))
+
+        return {
+            "match_id": match_id,
+            "created_at": str(item.get("created_at", "")),
+            "kills": kills,
+        }
+
     def find_common_records(self, player_names: List[str], limit: int, allowed_modes: List[str]) -> List[Dict[str, Any]]:
         allowed = set(allowed_modes)
         records: List[Dict[str, Any]] = []
 
         for match_id, item in self.matches.items():
-            if not isinstance(item, dict):
-                continue
-            if item.get("usable") is False:
-                continue
-            mode = str(item.get("game_mode", ""))
-            if mode not in allowed:
-                continue
-            players = item.get("players", {})
-            if not isinstance(players, dict):
-                continue
-            if not all(name in players for name in player_names):
-                continue
-
-            kills: Dict[str, float] = {}
-            ok = True
-            for name in player_names:
-                p = players.get(name)
-                if not isinstance(p, dict) or "kills" not in p:
-                    ok = False
-                    break
-                kills[name] = float(p.get("kills", 0))
-            if not ok:
-                continue
-
-            records.append(
-                {
-                    "match_id": match_id,
-                    "created_at": str(item.get("created_at", "")),
-                    "kills": kills,
-                }
-            )
+            record = self._build_record(match_id, item, player_names, allowed)
+            if record is not None:
+                records.append(record)
 
         records.sort(key=lambda x: x["created_at"], reverse=True)
         return records[:limit]
+
+    def find_records_by_match_ids(
+        self,
+        match_ids: List[str],
+        player_names: List[str],
+        limit: int,
+        allowed_modes: List[str],
+    ) -> List[Dict[str, Any]]:
+        allowed = set(allowed_modes)
+        records: List[Dict[str, Any]] = []
+        seen = set()
+
+        for match_id in match_ids:
+            if match_id in seen:
+                continue
+            seen.add(match_id)
+            record = self._build_record(match_id, self.get_match(match_id), player_names, allowed)
+            if record is not None:
+                records.append(record)
+            if len(records) >= limit:
+                break
+
+        return records
 
     def player_global_avg(self, player_name: str, allowed_modes: List[str]) -> Dict[str, float]:
         allowed = set(allowed_modes)

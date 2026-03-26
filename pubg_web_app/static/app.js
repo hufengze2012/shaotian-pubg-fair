@@ -1,4 +1,4 @@
-const players = Array.isArray(window.__PLAYERS__) ? window.__PLAYERS__ : [];
+let players = Array.isArray(window.__PLAYERS__) ? [...window.__PLAYERS__] : [];
 
 const playerPicker = document.getElementById("player-picker");
 const teamAPicker = document.getElementById("team-a-picker");
@@ -16,6 +16,11 @@ const submitBtn = document.getElementById("submit-btn");
 const resultRoot = document.getElementById("result-root");
 const resultEmpty = document.getElementById("result-empty");
 const loading = document.getElementById("loading");
+const addPlayerBtn = document.getElementById("add-player-btn");
+const addPlayerBox = document.getElementById("add-player-box");
+const newPlayerName = document.getElementById("new-player-name");
+const savePlayerBtn = document.getElementById("save-player-btn");
+const addPlayerMessage = document.getElementById("add-player-message");
 
 function escapeHtml(text) {
   return String(text)
@@ -39,49 +44,63 @@ function getCurrentMode() {
   return checked ? checked.value : "individual";
 }
 
-function renderPlayerPicker() {
+function showAddPlayerMessage(message, isError = false) {
+  addPlayerMessage.textContent = message;
+  addPlayerMessage.classList.remove("hidden");
+  addPlayerMessage.classList.toggle("error", isError);
+}
+
+function clearAddPlayerMessage() {
+  addPlayerMessage.textContent = "";
+  addPlayerMessage.classList.add("hidden");
+  addPlayerMessage.classList.remove("error");
+}
+
+function getIndividualHandicapSnapshot() {
+  const result = {};
+  const inputs = [...individualHandicaps.querySelectorAll("input[data-player]")];
+  for (const input of inputs) {
+    result[input.dataset.player] = input.value;
+  }
+  return result;
+}
+
+function getTeamSelectionSnapshot() {
+  return [...teamAPicker.querySelectorAll("input:checked")].map((x) => x.value);
+}
+
+function renderPlayerPicker(selectedNames = []) {
   playerPicker.innerHTML = players
     .map(
       (name) => `
       <label class="chip">
-        <input type="checkbox" value="${escapeHtml(name)}">
+        <input type="checkbox" value="${escapeHtml(name)}" ${selectedNames.includes(name) ? "checked" : ""}>
         <span>${escapeHtml(name)}</span>
       </label>
     `
     )
     .join("");
-
-  playerPicker.addEventListener("change", (event) => {
-    const selected = getSelectedPlayers();
-    if (selected.length > 4) {
-      event.target.checked = false;
-      showFormError("参赛玩家最多选 4 人。");
-      return;
-    }
-    clearFormError();
-    syncBySelection();
-  });
 }
 
-function renderIndividualHandicaps(selected) {
+function renderIndividualHandicaps(selected, handicapSnapshot = {}) {
   individualHandicaps.innerHTML = selected
     .map(
       (name) => `
       <div class="handicap-row">
         <label for="h-${escapeHtml(name)}">${escapeHtml(name)}</label>
-        <input id="h-${escapeHtml(name)}" data-player="${escapeHtml(name)}" type="number" step="0.5" min="0" value="0">
+        <input id="h-${escapeHtml(name)}" data-player="${escapeHtml(name)}" type="number" step="0.5" min="0" value="${escapeHtml(handicapSnapshot[name] ?? "0")}">
       </div>
     `
     )
     .join("");
 }
 
-function renderTeamPicker(selected) {
+function renderTeamPicker(selected, teamSelected = []) {
   teamAPicker.innerHTML = selected
     .map(
       (name) => `
       <label class="chip">
-        <input type="checkbox" value="${escapeHtml(name)}">
+        <input type="checkbox" value="${escapeHtml(name)}" ${teamSelected.includes(name) ? "checked" : ""}>
         <span>${escapeHtml(name)}</span>
       </label>
     `
@@ -92,8 +111,10 @@ function renderTeamPicker(selected) {
 function syncBySelection() {
   const selected = getSelectedPlayers();
   playerHint.textContent = `已选 ${selected.length}/4`;
-  renderIndividualHandicaps(selected);
-  renderTeamPicker(selected);
+  const handicapSnapshot = getIndividualHandicapSnapshot();
+  const teamSelected = getTeamSelectionSnapshot().filter((name) => selected.includes(name));
+  renderIndividualHandicaps(selected, handicapSnapshot);
+  renderTeamPicker(selected, teamSelected);
 }
 
 function syncModeView() {
@@ -115,6 +136,11 @@ function showFormError(message) {
 function clearFormError() {
   formError.textContent = "";
   formError.classList.add("hidden");
+}
+
+function rerenderPlayerControls(selectedNames = []) {
+  renderPlayerPicker(selectedNames);
+  syncBySelection();
 }
 
 function buildPayload() {
@@ -174,13 +200,18 @@ function renderEvaluation(title, selectedNames, block) {
 
   return `
     <div class="result-block">
-      <h3>${escapeHtml(title)}</h3>
-      <table>
-        <thead>
-          <tr><th>玩家</th><th>总分</th><th>均分</th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
+      <div class="result-head">
+        <h3>${escapeHtml(title)}</h3>
+        <span class="tag alt">分差 ${Number(block.gap ?? 0).toFixed(2)}</span>
+      </div>
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr><th>玩家</th><th>总分</th><th>均分</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
       <p class="stat-line">分差(max-min): ${Number(block.gap ?? 0).toFixed(2)}</p>
       <p class="stat-line">方差: ${Number(block.var ?? 0).toFixed(4)}</p>
     </div>
@@ -202,13 +233,46 @@ function renderProfile(profileRows) {
     .join("");
   return `
     <div class="result-block">
-      <h3>历史击杀画像</h3>
-      <table>
-        <thead>
-          <tr><th>玩家</th><th>全局平均击杀</th><th>四人同局平均击杀</th><th>四人同局场次</th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
+      <div class="result-head">
+        <h3>历史击杀画像</h3>
+        <span class="tag">4 人同局画像</span>
+      </div>
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr><th>玩家</th><th>全局平均击杀</th><th>四人同局平均击杀</th><th>四人同局场次</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderMetrics(data) {
+  const refresh = data.refresh || {};
+  return `
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">样本场次</div>
+        <div class="metric-value">${Number(data.meta.sample_count ?? 0)}</div>
+        <div class="metric-sub">四人同局可用样本</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">目标场次</div>
+        <div class="metric-value">${Number(data.meta.target_matches ?? 0)}</div>
+        <div class="metric-sub">最近历史窗口上限</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">缓存命中</div>
+        <div class="metric-value">${Number(refresh.cache_hits ?? 0)}</div>
+        <div class="metric-sub">本次直接复用的场次</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">新拉取</div>
+        <div class="metric-value">${Number(refresh.detail_requests ?? 0)}</div>
+        <div class="metric-sub">本次新增请求</div>
+      </div>
     </div>
   `;
 }
@@ -237,7 +301,10 @@ function renderNoData(data) {
 
   resultRoot.innerHTML = `
     <div class="result-block">
-      <h3>暂无同局数据</h3>
+      <div class="result-head">
+        <h3>暂无同局数据</h3>
+        <span class="tag warn">No Shared Matches</span>
+      </div>
       <p class="stat-line">${escapeHtml(data.error || "未找到可用数据")}</p>
       ${refresh}
     </div>
@@ -254,11 +321,15 @@ function renderResult(data) {
   const refresh = data.refresh
     ? `
       <div class="result-block">
-        <h3>刷新概况</h3>
-        <p class="stat-line">分片: ${escapeHtml(data.refresh.shard)}</p>
-        <p class="stat-line">四人同局候选: ${data.refresh.common_candidates}</p>
-        <p class="stat-line">缓存命中: ${data.refresh.cache_hits}</p>
-        <p class="stat-line">新拉取: ${data.refresh.detail_requests}</p>
+        <div class="result-head">
+          <h3>刷新概况</h3>
+          <span class="tag">${escapeHtml(data.refresh.shard)}</span>
+        </div>
+        <div class="pill-row">
+          <span class="pill">四人同局候选 ${data.refresh.common_candidates}</span>
+          <span class="pill">缓存命中 ${data.refresh.cache_hits}</span>
+          <span class="pill">新拉取 ${data.refresh.detail_requests}</span>
+        </div>
       </div>
     `
     : "";
@@ -267,9 +338,14 @@ function renderResult(data) {
   if (data.mode === "team" && data.team) {
     teamInfo = `
       <div class="result-block">
-        <h3>分队</h3>
-        <p class="stat-line">A队: ${escapeHtml(data.team.A.join(" / "))}</p>
-        <p class="stat-line">B队: ${escapeHtml(data.team.B.join(" / "))}</p>
+        <div class="result-head">
+          <h3>分队</h3>
+          <span class="tag alt">Team Mode</span>
+        </div>
+        <div class="pill-row">
+          <span class="pill">A队: ${escapeHtml(data.team.A.join(" / "))}</span>
+          <span class="pill">B队: ${escapeHtml(data.team.B.join(" / "))}</span>
+        </div>
       </div>
     `;
   }
@@ -285,22 +361,28 @@ function renderResult(data) {
     .join(" | ");
 
   resultRoot.innerHTML = `
-    <div class="result-block">
-      <h3>样本概况</h3>
-      <p class="stat-line">四人同局样本: ${data.meta.sample_count} 场</p>
-      <p class="stat-line">目标样本: ${data.meta.target_matches} 场</p>
-    </div>
+    ${renderMetrics(data)}
     ${refresh}
     ${teamInfo}
     ${renderProfile(data.profile || [])}
     <div class="result-block">
-      <h3>让分输入</h3>
-      <p class="stat-line">${manualHandicaps || "无"}</p>
+      <div class="result-head">
+        <h3>让分输入</h3>
+        <span class="tag">${data.mode === "team" ? "当前队伍让分" : "当前个人让分"}</span>
+      </div>
+      <div class="pill-row">
+        ${(manualHandicaps || "无").split(" | ").filter(Boolean).map((item) => `<span class="pill">${item}</span>`).join("")}
+      </div>
     </div>
     ${renderEvaluation(manualTitle, data.selected_names, data.manual.evaluation)}
     <div class="result-block">
-      <h3>推荐让分</h3>
-      <p class="stat-line">${suggestHandicaps || "无"}</p>
+      <div class="result-head">
+        <h3>推荐让分</h3>
+        <span class="tag alt">Auto Suggest</span>
+      </div>
+      <div class="pill-row">
+        ${(suggestHandicaps || "无").split(" | ").filter(Boolean).map((item) => `<span class="pill">${item}</span>`).join("")}
+      </div>
     </div>
     ${renderEvaluation(suggestionTitle, data.selected_names, data.suggestion.evaluation)}
   `;
@@ -338,7 +420,51 @@ async function submitForm(event) {
   }
 }
 
+async function saveNewPlayer() {
+  clearFormError();
+  clearAddPlayerMessage();
+  const name = newPlayerName.value.trim();
+  if (!name) {
+    showAddPlayerMessage("用户名不能为空。", true);
+    return;
+  }
+
+  savePlayerBtn.disabled = true;
+  try {
+    const response = await fetch("/api/players", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || "新增用户失败");
+    }
+
+    const selectedNames = getSelectedPlayers();
+    players = Array.isArray(data.players) ? [...data.players] : players;
+    rerenderPlayerControls(selectedNames);
+    newPlayerName.value = "";
+    addPlayerBox.classList.add("hidden");
+    showAddPlayerMessage(`已添加用户：${data.name}`);
+  } catch (error) {
+    showAddPlayerMessage(error.message || "新增用户失败", true);
+  } finally {
+    savePlayerBtn.disabled = false;
+  }
+}
+
 function bindEvents() {
+  playerPicker.addEventListener("change", (event) => {
+    const selected = getSelectedPlayers();
+    if (selected.length > 4) {
+      event.target.checked = false;
+      showFormError("参赛玩家最多选 4 人。");
+      return;
+    }
+    clearFormError();
+    syncBySelection();
+  });
   teamAPicker.addEventListener("change", (event) => {
     const picks = [...teamAPicker.querySelectorAll("input:checked")];
     if (picks.length > 2) {
@@ -353,6 +479,20 @@ function bindEvents() {
       clearFormError();
       syncModeView();
     });
+  });
+  addPlayerBtn.addEventListener("click", () => {
+    clearAddPlayerMessage();
+    addPlayerBox.classList.toggle("hidden");
+    if (!addPlayerBox.classList.contains("hidden")) {
+      newPlayerName.focus();
+    }
+  });
+  savePlayerBtn.addEventListener("click", saveNewPlayer);
+  newPlayerName.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      saveNewPlayer();
+    }
   });
   form.addEventListener("submit", submitForm);
 }

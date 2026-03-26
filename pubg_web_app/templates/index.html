@@ -4,37 +4,65 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PUBG 历史均分结算</title>
+  <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+  <div class="noise"></div>
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
+  <div class="grid-lines"></div>
 
   <main class="page">
     <header class="hero">
-      <p class="badge">PUBG Squad TPP Web</p>
-      <h1>历史均分结算看板</h1>
-      <p class="subtitle">直接在浏览器选择玩家、模式和让分，后端实时结合 PUBG 数据与本地缓存计算。</p>
-      <div class="hero-meta">
-        <span>目标样本: 最近 {{ target_matches }} 场</span>
-        <span>默认分片: {{ platform }}</span>
+      <div class="hero-copy">
+        <p class="badge">PUBG Squad TPP Web</p>
+        <h1>PUBG蜻蜓队长</h1>
+        <p class="subtitle">少天别叫唤</p>
+        <div class="hero-meta">
+          <span>目标样本: 最近 {{ target_matches }} 场</span>
+          <span>默认分片: {{ platform }}</span>
+        </div>
       </div>
+      <aside class="hero-stat-card">
+        <div class="hero-stat-top">Settlement / Live View</div>
+        <div class="hero-stat-value">{{ target_matches }}</div>
+        <div class="hero-stat-label">最近样本上限</div>
+        <div class="hero-stat-foot">
+          <span>四人同局</span>
+          <span>squad-tpp</span>
+        </div>
+      </aside>
     </header>
 
     <section class="grid">
       <article class="panel">
-        <h2>参数设置</h2>
+        <div class="panel-top">
+          <div>
+            <p class="eyebrow">Control Center</p>
+            <h2>参数设置</h2>
+          </div>
+          <p class="panel-note">先选人，再选模式与让分。</p>
+        </div>
         <form id="control-form">
-          <div class="field">
-            <label>参赛玩家（必须 4 人）</label>
+          <div class="field field-box">
+            <div class="field-head">
+              <label>参赛玩家（必须 4 人）</label>
+              <button id="add-player-btn" class="secondary-btn" type="button">增加用户</button>
+            </div>
+            <div id="add-player-box" class="add-player-box hidden">
+              <input id="new-player-name" type="text" placeholder="输入 PUBG 用户名">
+              <button id="save-player-btn" class="secondary-btn" type="button">保存到配置</button>
+            </div>
             <div id="player-picker" class="chip-grid"></div>
             <p id="player-hint" class="hint">已选 0/4</p>
+            <p id="add-player-message" class="hint hidden"></p>
           </div>
 
-          <div class="field">
+          <div class="field field-box">
             <label>模式</label>
             <div class="segmented">
               <label><input type="radio" name="mode" value="individual" checked> 个人</label>
@@ -42,12 +70,12 @@
             </div>
           </div>
 
-          <div class="field" id="individual-box">
+          <div class="field field-box" id="individual-box">
             <label>个人让分（0.5 步进）</label>
             <div id="individual-handicaps" class="handicap-grid"></div>
           </div>
 
-          <div class="field hidden" id="team-box">
+          <div class="field field-box hidden" id="team-box">
             <label>A 队成员（选 2 人，B 队自动为其余 2 人）</label>
             <div id="team-a-picker" class="chip-grid"></div>
             <div class="two-cols">
@@ -76,9 +104,22 @@
       </article>
 
       <article class="panel result-panel">
-        <h2>结算结果</h2>
+        <div class="panel-top">
+          <div>
+            <p class="eyebrow">Results</p>
+            <h2>结算结果</h2>
+          </div>
+          <p class="panel-note">自动给出当前结果与推荐让分。</p>
+        </div>
         <div id="loading" class="loading hidden">正在计算，请稍候...</div>
-        <div id="result-empty" class="empty">先在左侧选择参数并点击“刷新并结算”。</div>
+        <div id="result-empty" class="empty">
+          <div class="empty-visual">
+            <div class="empty-ring"></div>
+            <div class="empty-dot dot-a"></div>
+            <div class="empty-dot dot-b"></div>
+          </div>
+          <p>先在左侧选 4 名玩家、模式和让分，再点击“刷新并结算”。</p>
+        </div>
         <div id="result-root" class="hidden"></div>
       </article>
     </section>

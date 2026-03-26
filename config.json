@@ -24,6 +24,11 @@
       "name": "ac_automaton",
       "account_id": "ac_automaton",
       "platform": "pc-as"
+    },
+    {
+      "name": "BigSpicyPig",
+      "account_id": "BigSpicyPig",
+      "platform": "pc-as"
     }
   ],
   "api_key": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJjYzQ5MjBiMC1jNzk4LTAxM2QtYTI1Zi02YTVmNjY4ZWViMjIiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNzM4OTQzMjY1LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImxpZV9icmVha2VyIn0.J35s8E38sPGfS8nwAFxdq_h8xzESwugmxqgJwLSTi9k",

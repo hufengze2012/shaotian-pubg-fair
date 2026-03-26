@@ -135,7 +135,15 @@ def analyze_settlement(config: AppConfig, payload: Dict[str, Any]) -> Dict[str, 
             names=selected_names,
         )
 
-    records = load_common_records(cache, selected_names, config.num_matches)
+    if refresh_stats is not None:
+        records = load_common_records(
+            cache,
+            selected_names,
+            config.num_matches,
+            refresh_stats.common_match_ids,
+        )
+    else:
+        records = load_common_records(cache, selected_names, config.num_matches)
     refresh_payload = _format_refresh_stats(refresh_stats)
 
     if not records:

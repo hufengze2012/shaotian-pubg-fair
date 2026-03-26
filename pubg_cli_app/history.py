@@ -16,6 +16,7 @@ class RefreshStats:
     detail_requests: int
     player_match_counts: Dict[str, int]
     pair_overlaps: Dict[str, int]
+    common_match_ids: List[str]
 
 
 def _all_empty_match_lists(match_map: Dict[str, List[str]], names: List[str]) -> bool:
@@ -137,10 +138,18 @@ def refresh_common_history(
         detail_requests=detail_requests,
         player_match_counts=match_counts,
         pair_overlaps=pair_overlaps,
+        common_match_ids=common_ids,
     )
 
 
-def load_common_records(cache: MatchCache, names: List[str], limit: int) -> List[Dict[str, Any]]:
+def load_common_records(
+    cache: MatchCache,
+    names: List[str],
+    limit: int,
+    match_ids: List[str] | None = None,
+) -> List[Dict[str, Any]]:
+    if match_ids is not None:
+        return cache.find_records_by_match_ids(match_ids, names, limit, ALLOWED_MODES)
     return cache.find_common_records(names, limit, ALLOWED_MODES)
 
 
