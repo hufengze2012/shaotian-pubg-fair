@@ -1,0 +1,33 @@
+{
+  "players": [
+    {
+      "name": "Daisy_Six",
+      "account_id": "Daisy_Six",
+      "platform": "pc-as"
+    },
+    {
+      "name": "Dr_Liiiii",
+      "account_id": "Dr_Liiiii",
+      "platform": "pc-as"
+    },
+    {
+      "name": "shaotiandd",
+      "account_id": "shaotiandd",
+      "platform": "pc-as"
+    },
+    {
+      "name": "KWBeihai",
+      "account_id": "KWBeihai",
+      "platform": "pc-as"
+    },
+    {
+      "name": "ac_automaton",
+      "account_id": "ac_automaton",
+      "platform": "pc-as"
+    }
+  ],
+  "api_key": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJjYzQ5MjBiMC1jNzk4LTAxM2QtYTI1Zi02YTVmNjY4ZWViMjIiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNzM4OTQzMjY1LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImxpZV9icmVha2VyIn0.J35s8E38sPGfS8nwAFxdq_h8xzESwugmxqgJwLSTi9k",
+  "num_matches": 100,
+  "platform": "pc-as",
+  "note": "已切换为亚洲服务器 (pc-as)"
+}
