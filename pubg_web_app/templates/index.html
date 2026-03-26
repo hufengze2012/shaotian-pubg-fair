@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PUBG 历史均分结算</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <main class="page">
+    <header class="hero">
+      <p class="badge">PUBG Squad TPP Web</p>
+      <h1>历史均分结算看板</h1>
+      <p class="subtitle">直接在浏览器选择玩家、模式和让分，后端实时结合 PUBG 数据与本地缓存计算。</p>
+      <div class="hero-meta">
+        <span>目标样本: 最近 {{ target_matches }} 场</span>
+        <span>默认分片: {{ platform }}</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>参数设置</h2>
+        <form id="control-form">
+          <div class="field">
+            <label>参赛玩家（必须 4 人）</label>
+            <div id="player-picker" class="chip-grid"></div>
+            <p id="player-hint" class="hint">已选 0/4</p>
+          </div>
+
+          <div class="field">
+            <label>模式</label>
+            <div class="segmented">
+              <label><input type="radio" name="mode" value="individual" checked> 个人</label>
+              <label><input type="radio" name="mode" value="team"> 组队</label>
+            </div>
+          </div>
+
+          <div class="field" id="individual-box">
+            <label>个人让分（0.5 步进）</label>
+            <div id="individual-handicaps" class="handicap-grid"></div>
+          </div>
+
+          <div class="field hidden" id="team-box">
+            <label>A 队成员（选 2 人，B 队自动为其余 2 人）</label>
+            <div id="team-a-picker" class="chip-grid"></div>
+            <div class="two-cols">
+              <div>
+                <label for="team-handicap-a">A 队让分（0.5 步进）</label>
+                <input id="team-handicap-a" type="number" step="0.5" min="0" value="0">
+              </div>
+              <div>
+                <label for="team-handicap-b">B 队让分（0.5 步进）</label>
+                <input id="team-handicap-b" type="number" step="0.5" min="0" value="0">
+              </div>
+            </div>
+            <p class="hint">规则：A 队和 B 队不能同时让分。</p>
+          </div>
+
+          <div class="field inline">
+            <label class="switch">
+              <input id="refresh-toggle" type="checkbox" checked>
+              <span>在线刷新数据</span>
+            </label>
+          </div>
+
+          <button id="submit-btn" type="submit">刷新并结算</button>
+          <p id="form-error" class="error hidden"></p>
+        </form>
+      </article>
+
+      <article class="panel result-panel">
+        <h2>结算结果</h2>
+        <div id="loading" class="loading hidden">正在计算，请稍候...</div>
+        <div id="result-empty" class="empty">先在左侧选择参数并点击“刷新并结算”。</div>
+        <div id="result-root" class="hidden"></div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    window.__PLAYERS__ = {{ players | tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
