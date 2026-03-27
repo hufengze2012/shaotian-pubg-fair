@@ -1,9 +1,12 @@
 services:
   pubg-web:
     build: .
+    container_name: pubg-fair
     ports:
       - "8000:8000"
     volumes:
-      - ./config.json:/app/config.json
-      - ./pubg_cli_cache.json:/app/pubg_cli_cache.json
+      # 配置文件 - 挂载你极空间上的 config.json
+      - ./config.json:/app/config.json:ro
+    environment:
+      - TZ=Asia/Shanghai
     restart: unless-stopped
