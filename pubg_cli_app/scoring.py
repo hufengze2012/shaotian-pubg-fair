@@ -41,8 +41,8 @@ def evaluate_team(
     h_b = float(team_handicaps.get("B", 0.0))
 
     for rec in records:
-        a_kills = float(rec["kills"][team_a[0]]) + float(rec["kills"][team_a[1]])
-        b_kills = float(rec["kills"][team_b[0]]) + float(rec["kills"][team_b[1]])
+        a_kills = sum(float(rec["kills"][n]) for n in team_a)
+        b_kills = sum(float(rec["kills"][n]) for n in team_b)
 
         a_eff = max(0.0, a_kills - h_a)
         b_eff = max(0.0, b_kills - h_b)
@@ -121,8 +121,8 @@ def suggest_team_handicaps(
 
     max_team_kills = 0.0
     for rec in records:
-        a_kills = float(rec["kills"][team_a[0]]) + float(rec["kills"][team_a[1]])
-        b_kills = float(rec["kills"][team_b[0]]) + float(rec["kills"][team_b[1]])
+        a_kills = sum(float(rec["kills"][n]) for n in team_a)
+        b_kills = sum(float(rec["kills"][n]) for n in team_b)
         max_team_kills = max(max_team_kills, a_kills, b_kills)
 
     upper = round(np.ceil((max_team_kills + 2.0) / STEP) * STEP, 2)

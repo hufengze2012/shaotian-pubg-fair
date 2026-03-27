@@ -34,9 +34,9 @@ def _validate_selected_players(payload: Dict[str, Any], all_players: List[str]) 
     if not isinstance(selected, list):
         raise ValueError("selected_names 格式错误")
     selected_names = [str(x).strip() for x in selected if str(x).strip()]
-    if len(selected_names) != 4:
-        raise ValueError("必须且仅能选择 4 名玩家")
-    if len(set(selected_names)) != 4:
+    if not (2 <= len(selected_names) <= 4):
+        raise ValueError("必须选择 2-4 名玩家")
+    if len(set(selected_names)) != len(selected_names):
         raise ValueError("玩家选择不能重复")
     invalid = [name for name in selected_names if name not in all_players]
     if invalid:
@@ -62,16 +62,16 @@ def _validate_team_inputs(payload: Dict[str, Any], selected_names: List[str]) ->
     if not isinstance(team_a_raw, list):
         raise ValueError("team_a 格式错误")
     team_a = [str(x).strip() for x in team_a_raw if str(x).strip()]
-    if len(team_a) != 2:
-        raise ValueError("A队必须选择 2 名玩家")
-    if len(set(team_a)) != 2:
+    if len(team_a) < 1:
+        raise ValueError("A队至少选择 1 名玩家")
+    if len(set(team_a)) != len(team_a):
         raise ValueError("A队成员不能重复")
     if any(name not in selected_names for name in team_a):
-        raise ValueError("A队成员必须来自已选 4 名玩家")
+        raise ValueError("A队成员必须来自已选玩家")
 
     team_b = [name for name in selected_names if name not in team_a]
-    if len(team_b) != 2:
-        raise ValueError("B队成员计算失败，请重新选择分队")
+    if len(team_b) < 1:
+        raise ValueError("B队至少需要 1 名玩家，请调整A队人数")
 
     h_a = _validate_half_step(_to_float(payload.get("team_handicap_a", 0), "A队让分"), "A队让分")
     h_b = _validate_half_step(_to_float(payload.get("team_handicap_b", 0), "B队让分"), "B队让分")
@@ -150,13 +150,13 @@ def analyze_settlement(config: AppConfig, payload: Dict[str, Any]) -> Dict[str, 
         diagnostics = None
         if refresh_payload is not None and refresh_payload["common_candidates"] == 0:
             diagnostics = {
-                "reason": "当前查询窗口内四人同局交集为空",
+                "reason": f"当前查询窗口内{len(selected_names)}人同局交集为空",
                 "player_match_counts": refresh_payload["player_match_counts"],
                 "pair_overlaps": refresh_payload["pair_overlaps"],
             }
         return {
             "ok": False,
-            "error": "没有找到这4个人同局的历史数据。请检查玩家组合或开启在线刷新重试。",
+            "error": f"没有找到这{len(selected_names)}个人同局的历史数据。请检查玩家组合或开启在线刷新重试。",
             "selected_names": selected_names,
             "refresh": refresh_payload,
             "diagnostics": diagnostics,

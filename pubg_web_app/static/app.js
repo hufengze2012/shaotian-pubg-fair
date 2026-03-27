@@ -110,7 +110,7 @@ function renderTeamPicker(selected, teamSelected = []) {
 
 function syncBySelection() {
   const selected = getSelectedPlayers();
-  playerHint.textContent = `已选 ${selected.length}/4`;
+  playerHint.textContent = `已选 ${selected.length} 人`;
   const handicapSnapshot = getIndividualHandicapSnapshot();
   const teamSelected = getTeamSelectionSnapshot().filter((name) => selected.includes(name));
   renderIndividualHandicaps(selected, handicapSnapshot);
@@ -145,8 +145,8 @@ function rerenderPlayerControls(selectedNames = []) {
 
 function buildPayload() {
   const selected = getSelectedPlayers();
-  if (selected.length !== 4) {
-    throw new Error("请先选择 4 名参赛玩家。");
+  if (selected.length < 2 || selected.length > 4) {
+    throw new Error("请选择 2-4 名参赛玩家。");
   }
 
   const payload = {
@@ -171,8 +171,8 @@ function buildPayload() {
   }
 
   const teamA = [...teamAPicker.querySelectorAll("input:checked")].map((x) => x.value);
-  if (teamA.length !== 2) {
-    throw new Error("组队模式下，A 队必须选择 2 人。");
+  if (teamA.length < 1 || teamA.length >= selected.length) {
+    throw new Error("A 队至少选 1 人，且不能包含所有玩家。");
   }
   const hA = Number(teamHandicapA.value);
   const hB = Number(teamHandicapB.value);
@@ -235,12 +235,12 @@ function renderProfile(profileRows) {
     <div class="result-block">
       <div class="result-head">
         <h3>历史击杀画像</h3>
-        <span class="tag">4 人同局画像</span>
+        <span class="tag">同局画像</span>
       </div>
       <div class="table-shell">
         <table>
           <thead>
-            <tr><th>玩家</th><th>全局平均击杀</th><th>四人同局平均击杀</th><th>四人同局场次</th></tr>
+            <tr><th>玩家</th><th>全局平均击杀</th><th>同局平均击杀</th><th>同局场次</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
@@ -256,7 +256,7 @@ function renderMetrics(data) {
       <div class="metric-card">
         <div class="metric-label">样本场次</div>
         <div class="metric-value">${Number(data.meta.sample_count ?? 0)}</div>
-        <div class="metric-sub">四人同局可用样本</div>
+        <div class="metric-sub">同局可用样本</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">目标场次</div>
@@ -279,7 +279,7 @@ function renderMetrics(data) {
 
 function renderNoData(data) {
   const refresh = data.refresh
-    ? `<p class="stat-line">刷新结果: 分片=${escapeHtml(data.refresh.shard)}, 四人同局候选=${data.refresh.common_candidates}, 缓存命中=${data.refresh.cache_hits}, 新拉取=${data.refresh.detail_requests}</p>`
+    ? `<p class="stat-line">刷新结果: 分片=${escapeHtml(data.refresh.shard)}, 同局候选=${data.refresh.common_candidates}, 缓存命中=${data.refresh.cache_hits}, 新拉取=${data.refresh.detail_requests}</p>`
     : "";
 
   const diagnostics = data.diagnostics
@@ -326,7 +326,7 @@ function renderResult(data) {
           <span class="tag">${escapeHtml(data.refresh.shard)}</span>
         </div>
         <div class="pill-row">
-          <span class="pill">四人同局候选 ${data.refresh.common_candidates}</span>
+          <span class="pill">同局候选 ${data.refresh.common_candidates}</span>
           <span class="pill">缓存命中 ${data.refresh.cache_hits}</span>
           <span class="pill">新拉取 ${data.refresh.detail_requests}</span>
         </div>
@@ -467,9 +467,10 @@ function bindEvents() {
   });
   teamAPicker.addEventListener("change", (event) => {
     const picks = [...teamAPicker.querySelectorAll("input:checked")];
-    if (picks.length > 2) {
+    const selected = getSelectedPlayers();
+    if (picks.length >= selected.length) {
       event.target.checked = false;
-      showFormError("A 队只能选 2 人。");
+      showFormError("A 队不能包含所有玩家，B 队至少需要 1 人。");
     } else {
       clearFormError();
     }

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pyo
+pubg_cli_cache.json
+pubg_match_cache.json
+.env

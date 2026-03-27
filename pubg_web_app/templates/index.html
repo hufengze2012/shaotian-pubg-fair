@@ -32,7 +32,7 @@
         <div class="hero-stat-value">{{ target_matches }}</div>
         <div class="hero-stat-label">最近样本上限</div>
         <div class="hero-stat-foot">
-          <span>四人同局</span>
+          <span>同局数据</span>
           <span>squad-tpp</span>
         </div>
       </aside>
@@ -50,7 +50,7 @@
         <form id="control-form">
           <div class="field field-box">
             <div class="field-head">
-              <label>参赛玩家（必须 4 人）</label>
+              <label>参赛玩家（选 2-4 人）</label>
               <button id="add-player-btn" class="secondary-btn" type="button">增加用户</button>
             </div>
             <div id="add-player-box" class="add-player-box hidden">
@@ -76,7 +76,7 @@
           </div>
 
           <div class="field field-box hidden" id="team-box">
-            <label>A 队成员（选 2 人，B 队自动为其余 2 人）</label>
+            <label>A 队成员（至少选 1 人，B 队为其余玩家）</label>
             <div id="team-a-picker" class="chip-grid"></div>
             <div class="two-cols">
               <div>
@@ -118,7 +118,7 @@
             <div class="empty-dot dot-a"></div>
             <div class="empty-dot dot-b"></div>
           </div>
-          <p>先在左侧选 4 名玩家、模式和让分，再点击“刷新并结算”。</p>
+          <p>先在左侧选 2-4 名玩家、模式和让分，再点击”刷新并结算”。</p>
         </div>
         <div id="result-root" class="hidden"></div>
       </article>

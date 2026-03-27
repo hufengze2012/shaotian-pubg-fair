@@ -42,8 +42,8 @@ def load_config(path: str) -> AppConfig:
             continue
         players.append(PlayerConfig(name=name))
 
-    if len(players) < 4:
-        raise ConfigError("配置中的玩家少于4人")
+    if len(players) < 2:
+        raise ConfigError("配置中的玩家少于2人")
 
     api_key = str(raw.get("api_key", "")).strip()
     if not api_key:
