@@ -127,6 +127,7 @@
 
   <script>
     window.__PLAYERS__ = {{ players | tojson }};
+    window.__APP_BASE_PATH__ = {{ base_path | tojson }};
   </script>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

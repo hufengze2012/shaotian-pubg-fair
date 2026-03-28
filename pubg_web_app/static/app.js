@@ -1,4 +1,5 @@
 let players = Array.isArray(window.__PLAYERS__) ? [...window.__PLAYERS__] : [];
+const appBasePath = typeof window.__APP_BASE_PATH__ === "string" ? window.__APP_BASE_PATH__ : "";
 
 const playerPicker = document.getElementById("player-picker");
 const teamAPicker = document.getElementById("team-a-picker");
@@ -29,6 +30,10 @@ function escapeHtml(text) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function withBasePath(path) {
+  return `${appBasePath}${path}`;
 }
 
 function isHalfStep(value) {
@@ -399,7 +404,7 @@ async function submitForm(event) {
 
   try {
     const payload = buildPayload();
-    const response = await fetch("/api/analyze", {
+    const response = await fetch(withBasePath("/api/analyze"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -431,7 +436,7 @@ async function saveNewPlayer() {
 
   savePlayerBtn.disabled = true;
   try {
-    const response = await fetch("/api/players", {
+    const response = await fetch(withBasePath("/api/players"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),

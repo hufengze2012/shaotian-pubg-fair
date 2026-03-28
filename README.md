@@ -50,10 +50,10 @@ pip install -r requirements.txt
 ## 启动
 
 ```bash
-python pubg_web.py [--config config.json] [--host 127.0.0.1] [--port 8000] [--debug]
+python pubg_web.py [--config config.json] [--host 0.0.0.0] [--port 8083] [--base-path /pubg] [--debug]
 ```
 
-浏览器打开 `http://127.0.0.1:8000` 即可使用。
+浏览器打开 `http://127.0.0.1:8083/pubg/` 即可使用。
 
 ## 使用指南
 
